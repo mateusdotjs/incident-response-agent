@@ -1,0 +1,22 @@
+---
+description: Controle de dependências — nunca instalar pacotes sem autorização explícita
+globs:
+alwaysApply: true
+---
+
+# Dependências
+
+- **Nunca rode comandos de instalação de pacotes** (`npm install`, `pnpm add`,
+  `yarn add`, `uv add`, `pip install`, etc.) sem eu autorizar explicitamente
+  naquela conversa, mesmo que a dependência pareça óbvia ou pequena.
+- Se uma tarefa parecer exigir uma nova dependência, **pare e pergunte**:
+  diga qual pacote, por que é necessário, e qual alternativa existiria sem
+  adicioná-lo (se houver). Espere minha confirmação antes de prosseguir.
+- Isso vale também para dependências "de suporte" (tipos, dev dependencies,
+  linters, testes, utilitários de data/hora, HTTP client, etc.) — nada é
+  instalado automaticamente.
+- Não sugira trocar uma tecnologia já definida na spec (NestJS, Drizzle,
+  LangChain, LangGraph, PostgreSQL) por outra "melhor" — a stack já foi
+  decidida.
+- Editar `package.json` / `pyproject.toml` manualmente para adicionar uma
+  dependência também conta como instalar sem permissão. Não faça isso.

@@ -1,0 +1,34 @@
+---
+description: Regras do agente Python — sem acesso a Postgres, sem sequência fixa, sem diagnóstico hardcoded
+globs: apps/agent/**
+alwaysApply: false
+---
+
+# Agente Python (`apps/agent`)
+
+- **Proibido acessar PostgreSQL diretamente.** Toda informação vem via tools
+  HTTP que chamam a API NestJS. Nunca importe um driver/ORM de banco dentro
+  de `apps/agent`.
+- **O LLM nunca monta HTTP request manualmente.** Toda chamada à API passa
+  por uma tool Python tipada, com nome claro, descrição clara, argumentos
+  tipados, retorno estruturado e tratamento de erro.
+- **Não hardcode a sequência de investigação.** Não escreva um fluxo fixo do
+  tipo `metrics → deployments → logs → database`. A escolha de qual tool
+  chamar e em que ordem é decisão do agente/LLM em tempo de execução.
+- **Não hardcode o diagnóstico dos cenários.** O agente nunca deve ter um
+  `if` que reconhece "isso é o cenário X, logo a resposta é Y". O diagnóstico
+  precisa ser derivado das evidências retornadas pelas tools durante a
+  investigação.
+- **Não crie tools além das especificadas** sem justificar: inicialmente
+  apenas `get_service_health`, `get_service_metrics`,
+  `get_recent_deployments`, `get_deployment_details`, `search_logs`,
+  `get_database_metrics`.
+- **Sem ações destrutivas/automáticas nesta fase.** Tools como
+  `create_incident`, `notify_on_call`, `rollback_deployment` só entram na
+  fase de "Actions", e mesmo assim exigem aprovação humana explícita antes de
+  executar qualquer ação — nunca rollback automático.
+- **Sem MCP no MVP.** Comunicação é sempre Python tool → HTTP → NestJS. MCP é
+  uma evolução futura opcional, não implemente proativamente.
+- Ao chegar na etapa de LangGraph, explique antes de implementar qual
+  problema concreto o LangGraph resolve em relação ao agente simples (não
+  introduza LangGraph só porque está no roadmap).

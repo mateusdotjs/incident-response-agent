@@ -1,0 +1,26 @@
+---
+description: Cenários e seed — cenário é só estado do banco, nunca lógica condicional na API
+globs: scenarios/**,apps/api/src/seed/**
+alwaysApply: false
+---
+
+# Scenarios e Seed
+
+- Um cenário é **apenas dados no Postgres**, gerados por um script de seed.
+  A API nunca deve saber que um "cenário" existe.
+- Nunca implemente cenários como mocks em código (`if scenario === '...':
+  return fakeData()`). O seed deve inserir linhas reais nas tabelas
+  (`services`, `deployments`, `metrics`, `logs`, `database_metrics`,
+  `incidents`) que, quando consultadas pela API normal, produzem o
+  comportamento esperado do cenário.
+- Cada cenário (`deployment-failure`, `payment-provider-degradation`,
+  `database-overload`, `healthy`) deve:
+  1. limpar/resetar os dados relevantes;
+  2. inserir services, deployments, metrics, logs, database metrics e
+     incidents (quando aplicável) coerentes com a linha do tempo descrita na
+     spec.
+- Não crie um cenário novo, nem mude os números/timestamps de um cenário
+  existente, sem confirmar comigo — os valores (ex: error_rate 0.2% → 8.7%)
+  fazem parte do "roteiro" que o agente vai investigar depois.
+- Depois de rodar o seed, a API deve responder normalmente via queries reais
+  — nada de branch especial para "modo cenário".

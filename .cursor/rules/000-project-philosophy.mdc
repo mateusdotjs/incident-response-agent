@@ -1,0 +1,39 @@
+---
+description: Filosofia geral do projeto Incident Response Agent — simplicidade, escopo e ordem de desenvolvimento
+globs:
+alwaysApply: true
+---
+
+# Filosofia do projeto
+
+Este é um projeto de portfólio/estudo. O valor está em cada componente existir por
+um motivo claro, não em cobrir o máximo de tecnologias possível.
+
+## Regras obrigatórias
+
+- **Simplicidade primeiro.** Sempre prefira a solução mais simples que resolve o
+  problema atual. Não crie abstrações (interfaces, factories, base classes,
+  camadas extras) "para o futuro". Se uma abstração for proposta, explique em
+  1-2 frases por que ela é necessária *agora*, antes de implementá-la.
+- **Sem overengineering.** Não introduza padrões arquiteturais (CQRS, event
+  sourcing, hexagonal architecture, DDD pesado, etc.) a menos que eu peça
+  explicitamente.
+- **Não trabalhe fases fora de ordem.** O projeto segue: Backend (NestJS +
+  Drizzle + seed) → Scenarios → Python tools → Agente LangChain simples →
+  LangGraph → Diagnóstico estruturado → Human approval / actions. Não
+  implemente uma fase posterior (ex: LangGraph, actions, MCP) enquanto a fase
+  atual não estiver funcionando e validada por mim.
+- **Não pule etapas nem gere o projeto inteiro de uma vez.** Trabalhe um
+  componente por vez (ex: um controller, um schema, uma tool) e pare para eu
+  revisar antes de continuar.
+- **Não adicione tecnologias não especificadas.** Redis, Kafka, RabbitMQ,
+  Kubernetes, vector database, microservices reais, AWS, MCP, filas,
+  observabilidade complexa — nenhuma dessas entra sem eu pedir e justificar.
+- **Não faça CRUD genérico sem propósito.** Cada endpoint/tabela deve mapear
+  para algo descrito na spec do projeto.
+- **Separação de responsabilidades entre `apps/api` e `apps/agent` é
+  inegociável**: `apps/api` é a "empresa fictícia" (NestJS, sem lógica de IA);
+  `apps/agent` é a inteligência (Python, sem acesso direto ao Postgres). Veja
+  as regras específicas de cada pasta para detalhes.
+- Quando em dúvida entre "fazer mais completo" e "fazer o suficiente para a
+  fase atual", escolha o suficiente.

@@ -1,0 +1,29 @@
+---
+description: Regras de banco de dados — Drizzle schema vs migrations
+globs: apps/api/src/drizzle/**,apps/api/drizzle/**,apps/api/drizzle.config.*
+alwaysApply: false
+---
+
+# Banco de dados (Drizzle)
+
+- **A IA só edita arquivos de schema** (ex: `apps/api/src/drizzle/schema/*.ts`).
+  Nunca edite, crie ou apague arquivos dentro da pasta de migrations
+  (ex: `apps/api/drizzle/migrations/**` ou equivalente) manualmente.
+- **Nunca escreva SQL de migration à mão.** Migrations são geradas pela
+  ferramenta (`drizzle-kit generate`) e aplicadas (`drizzle-kit migrate` /
+  `push`) — isso é feito por mim rodando o comando, não pela IA editando
+  arquivos de migration diretamente.
+- Se uma mudança de schema exigir gerar/rodar uma migration, **não rode o
+  comando você mesma**: apenas ajuste o schema e me avise que uma migration
+  precisa ser gerada, com uma frase curta explicando o que mudou (ex: "add
+  coluna `severity` em `incidents`, seria necessário gerar migration").
+- Não edite arquivos de metadata/journal gerados pelo drizzle-kit
+  (`meta/_journal.json`, snapshots, etc.) — esses são artefatos de geração,
+  não código escrito à mão.
+- Ao modelar o schema, siga exatamente as entidades e campos definidos na
+  spec (`Service`, `Deployment`, `Metric`, `Log`, `DatabaseMetric`,
+  `Incident`) — não adicione colunas ou tabelas não especificadas sem
+  perguntar antes.
+- Relacionamentos (`Service 1 ── N Deployment`, etc.) devem ser explícitos no
+  schema Drizzle usando as referências apropriadas (foreign keys), não
+  resolvidos "na mão" na camada de service.

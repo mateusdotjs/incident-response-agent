@@ -1,0 +1,59 @@
+---
+description: Convenções da API NestJS — estrutura simples, DTOs, sem lógica de cenário
+globs: apps/api/**/*.ts
+alwaysApply: false
+---
+
+# API NestJS (`apps/api`)
+
+## Estrutura por módulo
+
+Cada domínio (`services`, `deployments`, `metrics`, `logs`, `databases`,
+`incidents`) segue o padrão simples:
+
+```
+<dominio>/
+├── dto/
+│   ├── list-<dominio>-query.dto.ts
+│   └── <dominio>-response.dto.ts
+├── <dominio>.controller.ts
+├── <dominio>.service.ts
+└── <dominio>.repository.ts
+```
+
+- **Controller**: só recebe request, valida via DTO, chama o service e
+  retorna. Nenhuma lógica de negócio no controller.
+- **Service**: contém a lógica de negócio/orquestração. Sem SQL direto aqui.
+- **Repository**: única camada que fala com o Drizzle/Postgres.
+- Não crie camadas extras (use cases, facades, mappers separados, etc.) a
+  menos que eu peça — mapear entidade → response DTO pode ser feito direto
+  no service ou no próprio DTO.
+
+## DTOs
+
+- Toda query param e todo response da API passam por um DTO explícito.
+  **Nunca retorne a entidade do banco diretamente** como resposta HTTP.
+- Não crie DTOs para casos que a spec não pede.
+
+## Nenhuma lógica de IA ou de cenário aqui
+
+- `apps/api` **não sabe o que é um "cenário"**. Nunca escreva algo como
+  `if (scenario === 'deployment_failure')` dentro de controller/service. A
+  API só faz queries sobre o que está no banco — o cenário é puramente
+  estado de dados, populado pelo seed.
+- Nenhuma lógica de IA, LLM, prompt ou tool fica em `apps/api`. Essa app é a
+  "empresa fictícia", não o agente.
+
+## Escopo dos endpoints
+
+- Implemente apenas os endpoints descritos na spec (`/services`,
+  `/services/:id`, `/services/:id/health`, `/services/:id/metrics`,
+  `/services/:id/deployments`, `/deployments/:id`, `/logs`,
+  `/databases/:database/metrics`, `/incidents`). Não adicione CRUD completo
+  (POST/PUT/DELETE) para entidades que só precisam de leitura, a menos que a
+  fase de "actions" (posterior, com human-in-the-loop) exija.
+
+## Ordem de implementação dentro do backend
+
+- Schema → endpoints de leitura simples → seed. Não comece a implementar
+  endpoints antes do schema correspondente existir e ter sido revisado.
