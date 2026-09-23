@@ -3,6 +3,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { DATABASE } from '../drizzle/drizzle.module';
 import type { Database } from '../drizzle/drizzle-client';
 import { metrics, services } from '../drizzle/schema';
+import { isUuid } from './service-ref';
 
 @Injectable()
 export class ServicesRepository {
@@ -20,6 +21,24 @@ export class ServicesRepository {
       .limit(1);
 
     return service ?? null;
+  }
+
+  async findByName(name: string) {
+    const [service] = await this.db
+      .select()
+      .from(services)
+      .where(eq(services.name, name))
+      .limit(1);
+
+    return service ?? null;
+  }
+
+  findByRef(ref: string) {
+    if (isUuid(ref)) {
+      return this.findById(ref);
+    }
+
+    return this.findByName(ref);
   }
 
   async findLatestMetricValue(serviceId: string, metric: string) {

@@ -30,14 +30,14 @@ export class DeploymentsService {
     serviceId: string,
     query: ListDeploymentsQueryDto,
   ): Promise<ListDeploymentsResponseDto> {
-    const service = await this.servicesRepository.findById(serviceId);
+    const service = await this.servicesRepository.findByRef(serviceId);
 
     if (!service) {
-      throw new NotFoundException(`Service ${serviceId} not found`);
+      throw new NotFoundException(`Service "${serviceId}" not found`);
     }
 
     const rows = await this.repository.findByService({
-      serviceId,
+      serviceId: service.id,
       from: query.from ? new Date(query.from) : undefined,
       to: query.to ? new Date(query.to) : undefined,
       environment: query.environment,

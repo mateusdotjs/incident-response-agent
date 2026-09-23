@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsUUID } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export const INCIDENT_STATUSES = ['open', 'investigating', 'resolved'] as const;
 export const INCIDENT_SEVERITIES = [
@@ -18,6 +18,6 @@ export class ListIncidentsQueryDto {
   severity?: (typeof INCIDENT_SEVERITIES)[number];
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   serviceId?: string;
 }

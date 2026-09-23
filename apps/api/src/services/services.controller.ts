@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { ServiceResponseDto } from './dto/service-response.dto';
 import { ServiceHealthResponseDto } from './dto/service-health-response.dto';
@@ -13,15 +13,13 @@ export class ServicesController {
   }
 
   @Get(':serviceId')
-  findById(
-    @Param('serviceId', ParseUUIDPipe) serviceId: string,
-  ): Promise<ServiceResponseDto> {
-    return this.servicesService.findById(serviceId);
+  findByRef(@Param('serviceId') serviceId: string): Promise<ServiceResponseDto> {
+    return this.servicesService.findByRef(serviceId);
   }
 
   @Get(':serviceId/health')
   getHealth(
-    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Param('serviceId') serviceId: string,
   ): Promise<ServiceHealthResponseDto> {
     return this.servicesService.getHealth(serviceId);
   }

@@ -16,30 +16,30 @@ export class ServicesService {
     return rows.map((row) => this.toResponse(row));
   }
 
-  async findById(serviceId: string): Promise<ServiceResponseDto> {
-    const service = await this.repository.findById(serviceId);
+  async findByRef(ref: string): Promise<ServiceResponseDto> {
+    const service = await this.repository.findByRef(ref);
 
     if (!service) {
-      throw new NotFoundException(`Service ${serviceId} not found`);
+      throw new NotFoundException(`Service "${ref}" not found`);
     }
 
     return this.toResponse(service);
   }
 
-  async getHealth(serviceId: string): Promise<ServiceHealthResponseDto> {
-    const service = await this.repository.findById(serviceId);
+  async getHealth(ref: string): Promise<ServiceHealthResponseDto> {
+    const service = await this.repository.findByRef(ref);
 
     if (!service) {
-      throw new NotFoundException(`Service ${serviceId} not found`);
+      throw new NotFoundException(`Service "${ref}" not found`);
     }
 
     const [errorRate, latencyP95] = await Promise.all([
-      this.repository.findLatestMetricValue(serviceId, 'error_rate'),
-      this.repository.findLatestMetricValue(serviceId, 'latency_p95'),
+      this.repository.findLatestMetricValue(service.id, 'error_rate'),
+      this.repository.findLatestMetricValue(service.id, 'latency_p95'),
     ]);
 
     return {
-      serviceId,
+      serviceId: service.id,
       status: this.resolveStatus(errorRate ?? 0, latencyP95 ?? 0),
       errorRate: errorRate ?? 0,
       latencyP95: latencyP95 ?? 0,

@@ -5,7 +5,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Max,
   Min,
 } from 'class-validator';
@@ -14,7 +13,7 @@ export const LOG_LEVELS = ['INFO', 'WARN', 'ERROR'] as const;
 
 export class ListLogsQueryDto {
   @IsOptional()
-  @IsUUID()
+  @IsString()
   serviceId?: string;
 
   @IsOptional()

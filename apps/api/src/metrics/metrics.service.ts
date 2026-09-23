@@ -15,21 +15,21 @@ export class MetricsService {
     serviceId: string,
     query: ListMetricsQueryDto,
   ): Promise<MetricsResponseDto> {
-    const service = await this.servicesRepository.findById(serviceId);
+    const service = await this.servicesRepository.findByRef(serviceId);
 
     if (!service) {
-      throw new NotFoundException(`Service ${serviceId} not found`);
+      throw new NotFoundException(`Service "${serviceId}" not found`);
     }
 
     const points = await this.repository.findPoints({
-      serviceId,
+      serviceId: service.id,
       metric: query.metric,
       from: query.from ? new Date(query.from) : undefined,
       to: query.to ? new Date(query.to) : undefined,
     });
 
     return {
-      serviceId,
+      serviceId: service.id,
       metric: query.metric,
       points: points.map((point) => ({
         timestamp: point.timestamp,

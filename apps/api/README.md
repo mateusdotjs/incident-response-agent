@@ -1,98 +1,102 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Incident Response Agent — API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS REST API backed by PostgreSQL. Incident stories are loaded with **`db:seed`**; the API only reads the database.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Quick start
 
-## Description
+From the **repo root**: `cp .env.example .env` and `docker compose up -d`.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+Then in **`apps/api`**:
 
 ```bash
-$ npm install
+cp .env.example .env
+npm install
+npm run db:migrate
+npm run db:seed -- --preset deployment-failure
+npm run start:dev
 ```
 
-## Compile and run the project
+Base URL: `http://localhost:3000` (see `PORT` in `.env`).
+
+## Service names
+
+Every seed creates the same four services. Use these names in paths and in `?serviceId=`:
+
+| Name | Typical use |
+|------|-------------|
+| `checkout` | Primary service under investigation |
+| `payment` | Payment provider scenarios |
+| `orders` | Supporting data |
+| `catalog` | Supporting data |
+
+Example: `GET /services/checkout/health` — not the UUID from `GET /services`.
+
+UUIDs still work if you pass the `id` field from JSON responses (e.g. for a future agent).
+
+## Seed presets
+
+Each run **wipes and reloads** all data.
+
+| Preset | Checkout health (typical) | Example log `query=` (substring on `message`) |
+|--------|---------------------------|--------------------------------------------------|
+| `deployment-failure` | `degraded` — deploy 2.4.1 | `PaymentProviderTimeout` |
+| `payment-provider-degradation` | `degraded` — check `payment` health too | `PaymentProviderError` |
+| `database-overload` | `degraded` — high DB metrics | `DatabaseQueryTimeout` |
+| `healthy` | `healthy` | (mostly INFO; try `Order placed`) |
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run db:seed -- --preset healthy
 ```
 
-## Run tests
+## Searching logs
+
+`GET /logs` accepts optional `query`. It is a **case-insensitive substring search** on the log **`message`** field (not full-text search over metadata).
+
+You are not expected to guess strings out of nowhere:
+
+1. **Match the preset you seeded** — the table above lists messages inserted by each preset (defined in `src/seed/presets/`).
+2. **Browse first** — omit `query` to see what is in the DB, then filter:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+curl "http://localhost:3000/logs?serviceId=checkout&limit=20"
+curl "http://localhost:3000/logs?serviceId=checkout&level=ERROR&limit=20"
 ```
 
-## Deployment
+After `deployment-failure`, filtering with `query=PaymentProviderTimeout` works because the seed writes ERROR logs with that exact message on checkout.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Example requests
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+curl http://localhost:3000/services
+curl http://localhost:3000/services/checkout/health
+curl "http://localhost:3000/services/checkout/metrics?metric=error_rate"
+curl http://localhost:3000/services/checkout/deployments
+curl "http://localhost:3000/logs?serviceId=checkout&query=PaymentProviderTimeout&limit=10"
+curl http://localhost:3000/databases/production-db/metrics
+curl http://localhost:3000/incidents
+curl http://localhost:3000/services/payment/health
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Deployment details (UUID from list response — copy `items[0].id` once if needed):
 
-## Resources
+```bash
+curl http://localhost:3000/services/checkout/deployments
+curl http://localhost:3000/deployments/<deployment-uuid>
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+`from` / `to` on metrics and deployments are optional; omit them to return all seeded points.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## npm scripts
 
-## Support
+| Script | Purpose |
+|--------|---------|
+| `npm run start:dev` | API with watch |
+| `npm run db:migrate` | Apply migrations |
+| `npm run db:seed -- --preset <name>` | Reset DB and load preset |
+| `npm run db:generate` | Generate migration after schema change |
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Troubleshooting
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **Tables missing** — Run `db:migrate` before `db:seed`.
+- **Connection refused** — `docker compose up -d` from repo root; check `DATABASE_URL`.
+- **404 on service name** — Run seed first; names are fixed (`checkout`, etc.).

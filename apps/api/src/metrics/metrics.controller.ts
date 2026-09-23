@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
 import { ListMetricsQueryDto } from './dto/list-metrics-query.dto';
 import { MetricsResponseDto } from './dto/metrics-response.dto';
@@ -9,7 +9,7 @@ export class MetricsController {
 
   @Get()
   findByService(
-    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Param('serviceId') serviceId: string,
     @Query() query: ListMetricsQueryDto,
   ): Promise<MetricsResponseDto> {
     return this.metricsService.findByService(serviceId, query);

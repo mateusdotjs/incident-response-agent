@@ -12,7 +12,7 @@ export class DeploymentsController {
 
   @Get('services/:serviceId/deployments')
   findByService(
-    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Param('serviceId') serviceId: string,
     @Query() query: ListDeploymentsQueryDto,
   ): Promise<ListDeploymentsResponseDto> {
     return this.deploymentsService.findByService(serviceId, query);

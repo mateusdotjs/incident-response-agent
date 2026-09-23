@@ -1,0 +1,1 @@
+export { seedSharedServices } from '../apply';
